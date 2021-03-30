@@ -1,0 +1,4 @@
+pyfgc-const==0.0.1
+PyQt5==5.12.3
+PyQt5-sip==4.19.18
+QScintilla==2.11.4

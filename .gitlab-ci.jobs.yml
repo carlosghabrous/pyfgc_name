@@ -1,0 +1,76 @@
+.pyfgc_base:
+  variables:
+    project_name: pyfgc_name
+    project_root: sw/clients/python/pyfgc_name
+    repo_style: mono
+
+
+.pyfgc_changes:
+  extends: .pyfgc_base
+  rules:
+    # Never run if we have a tag.
+    - if: '$CI_COMMIT_TAG != null'
+      when: never
+
+    # If this file change is triggered it means we have a new
+    # branch. (ref: https://docs.gitlab.com/ee/ci/yaml/#ruleschanges)
+    - changes:
+       - IF_NEW_BRANCH  # Watch for a file of this name - it mustn't exist.
+      when: never
+
+    - changes:
+       - sw/clients/python/pyfgc_name/**/*
+      when: on_success
+
+
+.pyfgc_tag:
+  extends: .pyfgc_base
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^pyfgc_name-v\d+.*$/'
+      when: on_success
+
+
+# A development installation of pyfgc_name tested with pytest.
+pyfgc_dev_test:
+  stage: test
+  extends:
+    - .acc_py_dev_test
+    - .pyfgc_changes
+
+
+# A full installation of pyfgc_name, tested with pytest.
+pyfgc_full_test:
+  stage: test
+  extends:
+    - .acc_py_full_test
+    - .pyfgc_changes
+
+        
+# A development build of the documentation, made available through cern.ch/acc-py.
+pyfgc_docs_build:
+  stage: deploy
+  extends:
+    - .acc_py_build_docs_v2
+    - .pyfgc_changes
+  artifacts:
+    name: "pyfgc_name-docs"
+
+
+# A release build of the documentation, made available through cern.ch/acc-py.
+pyfgc_tagged_docs:
+  stage: deploy
+  extends:
+    - .acc_py_build_docs_on_tag_v2
+    - .pyfgc_tag
+  artifacts:
+    name: "pyfgc_name-docs"
+
+      
+# A source distribution release, uploaded to the Acc-Py PyPi repository.
+pyfgc_release_sdist:
+  stage: deploy
+  extends:
+    - .acc_py_release_sdist_v2
+    - .pyfgc_tag
+
+
